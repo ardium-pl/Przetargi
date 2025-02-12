@@ -1,0 +1,35 @@
+{
+  "name": "bid-scraper",
+  "version": "1.0.0",
+  "description": "Scraper for public tenders",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node index.js",
+    "start:normal": "node index.js normal",
+    "start:with-details": "node index.js normal --with-details",
+    "start:only-details": "node index.js details",
+    "start:xhr": "node index.js xhr",
+    "start:api": "node index.js api",
+    "start:both": "node index.js normal & node index.js xhr",
+    "start:all": "node index.js normal & node index.js xhr & node index.js api",
+    "init": "node init.js",
+    "test": "jest",
+    "scrape:puppeteer": "node src/scrapers/puppeteer/listing-scraper.js",
+    "scrape:api": "node src/scrapers/official-api/official-api-scraper.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.4.7",
+    "mongodb": "^6.12.0",
+    "mongoose": "^8.9.5",
+    "openai": "^4.83.0",
+    "puppeteer": "^24.2.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "winston": "^3.10.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "nodemon": "^3.0.0"
+  }
+}
