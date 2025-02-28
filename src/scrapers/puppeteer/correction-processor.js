@@ -9,11 +9,13 @@ class CorrectionProcessor {
             apiKey: process.env.OPENAI_API_KEY
         });
 
+        // Kolekcja docelowa dla wszystkich promptów
+        this.targetCollection = "tenders_analysis_prompts_testing_final_version";
+
         // Define multiple prompts
         this.prompts = [
             {
                 name: "basic",
-                collection: "tender_analysis_regex_test_1",
                 systemPrompt: `Analyze tender notices specifically for Microsoft licensing and subscription services. Extract detailed information about:
 
                 1. Microsoft Services & Licensing:
@@ -70,7 +72,6 @@ class CorrectionProcessor {
             },
             {
                 name: "section_specific",
-                collection: "tender_analysis_regex_test_2",
                 systemPrompt: `Analyze tender notices for Microsoft licensing and subscription services, focusing on extracting accurate information from specific sections of the document.
 
                 1. Microsoft Services & Licensing:
@@ -136,13 +137,7 @@ class CorrectionProcessor {
                 Use null for missing values. Currency should be PLN if not specified otherwise.`
             },
             {
-                name: "compact_section_specific",
-                collection: "tender_analysis_regex_test_3",
-                systemPrompt: `Analyze tender notices for Microsoft licensing and subscription services. Look for specific sections in Polish tender announcements: Section 1 contains basic information, Section 2 contains details about the contracting authority, Section 3 contains procurement details, and SECTION 4 CONTAINS PRICE AND CONTRACT INFORMATION. Focus primarily on Section 4 for pricing details and Section 5 for scoring criteria. Microsoft Services & Licensing to look for: Exchange Online, Microsoft 365/M365 (including E3/E5/Business variants), Entra ID (formerly Azure AD), Enterprise licensing agreements (EA, CSP, MPSA), Microsoft product subscriptions and licenses, Microsoft cloud services (Azure, Exchange Online, Teams). Keywords (case insensitive, including Polish variants): Licensing terms: "licencj", "subskrypcj", "subscription", "MPSA"; Product names: "Microsoft", "Exchange Online", "M365", "E3", "E5", "Entra", "Teams"; Service types: "cloud", "online", "Microsoft 365", "Azure". WHEN EXTRACTING PRICE: Look specifically in SECTION 4 where the price information is located, specifically subsections with headings like "Wartość zamówienia", "Szacunkowa wartość", or "Cena". Extract ONLY the total contract value/price, not unit prices or other monetary values. WHEN EXTRACTING SCORING CRITERIA: Look for sections titled "Kryteria oceny ofert" or "Kryteria wyboru oferty" in SECTION 5, extract the exact point value for price (e.g. "Cena - 60 pkt") and formula used for calculation and show all information about the scoring criteria. WHEN CHECKING FOR PARTIAL OFFERS: Look for phrases like "Czy dopuszcza się złożenie oferty częściowej" or "Zamówienie podzielone na części" in SECTION 4. Return JSON: {"save": boolean (true if clearly Microsoft-specific licensing/services), "message": string (reasoning), "products": array (specific Microsoft products/services found), "agreement_type": string (if specified: EA, CSP, MPSA etc), "license_counts": object (product:quantity pairs), "values": {"net": number | null, "gross": number | null, "currency": string}, "scoring_criteria": {"price_points": number | null, "formula": string | null, "other_criteria": array of objects with "name" and "points" properties}, "partial_offers_allowed": boolean | null, "duration": string (subscription/license period if specified), "deadline": string (submission deadline if specified)}. Exclude if: Generic IT/software mentions without Microsoft specifics, Hardware/devices is the main objective, Non-licensing Microsoft mentions, Contains: Microsoft edge/Edge, surface, xbox, hardware. For save=true, tender must clearly relate to Microsoft software/cloud licensing. Use null for missing values. Currency should be PLN if not specified otherwise.`
-            },
-            {
                 name: "section_navigation_expert",
-                collection: "tender_analysis_regex_test_4",
                 systemPrompt: `Analizuj ogłoszenia przetargowe dotyczące Microsoft z PRECYZYJNĄ NAWIGACJĄ PO SEKCJACH dokumentu. Polskie ogłoszenia przetargowe mają standardową strukturę, której MUSISZ ściśle przestrzegać:
 
                 STRUKTURA POLSKIEGO OGŁOSZENIA PRZETARGOWEGO:
@@ -213,10 +208,8 @@ class CorrectionProcessor {
                 Dla save=true, przetarg musi wyraźnie dotyczyć licencjonowania oprogramowania/chmury Microsoft.
                 Użyj null dla brakujących wartości. Waluta powinna być PLN, jeśli nie określono inaczej.`
             },
-
             {
                 name: "strict_section_mapping",
-                collection: "tender_analysis_regex_test_5",
                 systemPrompt: `Analizuj ogłoszenia przetargowe dotyczące licencjonowania i usług Microsoft, stosując ŚCISŁE MAPOWANIE SEKCJI. Ogłoszenia mają precyzyjną, przewidywalną strukturę, której NALEŻY bezwzględnie przestrzegać:
             
                 MODEL ARCHITEKTURY DOKUMENTU:
@@ -295,10 +288,8 @@ class CorrectionProcessor {
                 Dla save=true, przetarg musi wyraźnie dotyczyć licencjonowania oprogramowania/chmury Microsoft.
                 Użyj null dla brakujących wartości. Waluta powinna być PLN, jeśli nie określono inaczej.`
             },
-
             {
                 name: "section_based_extraction",
-                collection: "tender_analysis_regex_test_6",
                 systemPrompt: `Analizuj ogłoszenia przetargowe dotyczące licencjonowania i usług Microsoft, stosując PRECYZYJNĄ EKSTRAKCJĘ BAZUJĄCĄ NA SEKCJACH. Każdą informację wyodrębnij WYŁĄCZNIE z właściwej sekcji:
             
                 MAPA SEKCJI I PODSEKCJI DO PRECYZYJNEJ EKSTRAKCJI:
@@ -377,10 +368,8 @@ class CorrectionProcessor {
                 Dla save=true, przetarg musi wyraźnie dotyczyć licencjonowania oprogramowania/chmury Microsoft.
                 Użyj null dla brakujących wartości. Waluta powinna być PLN, jeśli nie określono inaczej.`
             },
-
             {
                 name: "exact_numeric_extraction",
-                collection: "tender_analysis_regex_test_7",
                 systemPrompt: `Analizuj ogłoszenia przetargowe dotyczące Microsoft ze szczególnym naciskiem na PRECYZYJNĄ EKSTRAKCJĘ WARTOŚCI NUMERYCZNYCH. Celem jest uzyskanie dokładnych wartości bez interpretacji i sumowania.
             
                 WARTOŚĆ ZAMÓWIENIA - PROTOKÓŁ EKSTRAKCJI:
@@ -473,10 +462,8 @@ class CorrectionProcessor {
                 Dla save=true, przetarg musi wyraźnie dotyczyć licencjonowania oprogramowania/chmury Microsoft.
                 Użyj null dla brakujących wartości. Waluta powinna być PLN, jeśli nie określono inaczej.`
             },
-
             {
                 name: "formula_preservation_expert",
-                collection: "tender_analysis_regex_test_8",
                 systemPrompt: `Analizuj ogłoszenia przetargowe dotyczące Microsoft z ABSOLUTNYM PRIORYTETEM NA ZACHOWANIE PEŁNYCH FORMUŁ PUNKTACJI. Głównym celem jest dokładne skopiowanie formuł bez jakichkolwiek modyfikacji.
             
                 FORMUŁA PUNKTACJI - PROTOKÓŁ EKSTRAKCJI ZE STUPROCENTOWĄ WIERNOŚCIĄ:
@@ -567,10 +554,8 @@ class CorrectionProcessor {
                 Dla save=true, przetarg musi wyraźnie dotyczyć licencjonowania oprogramowania/chmury Microsoft.
                 Użyj null dla brakujących wartości. Waluta powinna być PLN, jeśli nie określono inaczej.`
             },
-
             {
                 name: "sectional_extraction_pipeline",
-                collection: "tender_analysis_regex_test_9",
                 systemPrompt: `Analizuj ogłoszenia przetargowe dotyczące Microsoft stosując ŚCISŁY PIPELINE EKSTRAKCJI SEKCYJNEJ. Przetwarzaj dokument systematycznie, sekcja po sekcji, z maksymalną precyzją i bez interpretacji.
             
                 PIPELINE EKSTRAKCJI - RYGORYSTYCZNIE WYKONUJ KAŻDY KROK:
@@ -652,10 +637,8 @@ class CorrectionProcessor {
                 Dla save=true, przetarg musi wyraźnie dotyczyć licencjonowania oprogramowania/chmury Microsoft.
                 Użyj null dla brakujących wartości. Waluta powinna być PLN, jeśli nie określono inaczej.`
             },
-
             {
                 name: "section_number_targeter",
-                collection: "tender_analysis_regex_test_10",
                 systemPrompt: `Analizuj ogłoszenia przetargowe dotyczące Microsoft z wykorzystaniem PRECYZYJNYCH ADRESÓW SEKCJI. Obsługuj każdy dokument jako bazę danych z dokładnie określonymi adresami pól.
             
                 INSTRUKCJA ADRESOWANIA PRECYZYJNEGO:
@@ -753,10 +736,8 @@ class CorrectionProcessor {
                 Dla save=true, przetarg musi wyraźnie dotyczyć licencjonowania oprogramowania/chmury Microsoft.
                 Użyj null dla brakujących wartości. Waluta powinna być PLN, jeśli nie określono inaczej.`
             },
-
             {
                 name: "direct_content_extractor",
-                collection: "tender_analysis_regex_test_11",
                 systemPrompt: `Analizuj ogłoszenia przetargowe dotyczące Microsoft poprzez BEZPOŚREDNIĄ EKSTRAKCJĘ ZAWARTOŚCI. Zamiast interpretować dane, kopiuj je DOKŁADNIE tak, jak są zapisane w dokumencie.
             
                 INSTRUKCJA BEZPOŚREDNIEJ EKSTRAKCJI:
@@ -835,10 +816,8 @@ class CorrectionProcessor {
                 Dla save=true, przetarg musi wyraźnie dotyczyć licencjonowania oprogramowania/chmury Microsoft.
                 Użyj null dla brakujących wartości. Waluta powinna być PLN, jeśli nie określono inaczej.`
             },
-
             {
                 name: "dual_priority_extractor",
-                collection: "tender_analysis_regex_test_12",
                 systemPrompt: `Analizuj ogłoszenia przetargowe dotyczące Microsoft, stosując ekstrakcję z PODWÓJNYM PRIORYTETEM: Absolutna precyzja dla WARTOŚCI ZAMÓWIENIA i PEŁNA WIERNOŚĆ dla FORMUŁ PUNKTACJI.
             
                 PRIORYTET 1: PRECYZYJNA EKSTRAKCJA WARTOŚCI ZAMÓWIENIA
@@ -931,10 +910,8 @@ class CorrectionProcessor {
                 Dla save=true, przetarg musi wyraźnie dotyczyć licencjonowania oprogramowania/chmury Microsoft.
                 Użyj null dla brakujących wartości. Waluta powinna być PLN, jeśli nie określono inaczej.`
             },
-
             {
                 name: "comprehensive_extraction_system",
-                collection: "tender_analysis_regex_test_13",
                 systemPrompt: `Analizuj ogłoszenia przetargowe dotyczące Microsoft z wykorzystaniem KOMPLEKSOWEGO SYSTEMU EKSTRAKCJI, który łączy najskuteczniejsze techniki precyzyjnego wyodrębniania wartości i formuł.
             
                 SYSTEM EKSTAKCJI WARTOŚCI ZAMÓWIENIA:
@@ -1046,20 +1023,19 @@ class CorrectionProcessor {
             await db.connect();
             this.db = db;
 
-            // Create indexes for all collections
-            for (const prompt of this.prompts) {
-                const collection = this.db.db.collection(prompt.collection);
-                await collection.createIndexes([
-                    {key: {tenderId: 1}, unique: true},
-                    {key: {save: 1}},
-                    {key: {"values.net": 1}},
-                    {key: {"values.gross": 1}},
-                    {key: {deadline: 1}},
-                    {key: {processedAt: 1}},
-                    {key: {"source_tender.number": 1}}
-                ]);
-                logger.info(`Created indexes for collection: ${prompt.collection}`);
-            }
+            // Tworzenie indeksów dla kolekcji docelowej
+            const collection = this.db.db.collection(this.targetCollection);
+            await collection.createIndexes([
+                {key: {tenderId: 1, promptName: 1}, unique: true}, // Złożony indeks dla unikalnej pary tenderId-promptName
+                {key: {save: 1}},
+                {key: {"values.net": 1}},
+                {key: {"values.gross": 1}},
+                {key: {deadline: 1}},
+                {key: {processedAt: 1}},
+                {key: {"source_tender.number": 1}},
+                {key: {promptName: 1}} // Indeks dla wyszukiwania po promptName
+            ]);
+            logger.info(`Created indexes for collection: ${this.targetCollection}`);
 
             logger.info('CorrectionProcessor database initialized with indexes');
             this.db = db;
@@ -1077,13 +1053,17 @@ class CorrectionProcessor {
 
             // Process each prompt in sequence
             for (const promptConfig of this.prompts) {
-                logger.info(`Starting processing with prompt "${promptConfig.name}" to collection "${promptConfig.collection}"`);
-                const newCollection = this.db.db.collection(promptConfig.collection);
+                logger.info(`Starting processing with prompt "${promptConfig.name}" to collection "${this.targetCollection}"`);
+                const targetCollection = this.db.db.collection(this.targetCollection);
 
                 for (const tender of tenders) {
                     try {
-                        // Skip if already processed in this collection
-                        const existing = await newCollection.findOne({tenderId: tender.tenderId});
+                        // Skip if already processed with this prompt
+                        const existing = await targetCollection.findOne({
+                            tenderId: tender.tenderId,
+                            promptName: promptConfig.name
+                        });
+
                         if (existing) {
                             logger.info(`Tender ${tender.tenderId} already processed with prompt "${promptConfig.name}", skipping...`);
                             continue;
@@ -1126,10 +1106,10 @@ class CorrectionProcessor {
                             },
                             fullContent: tender.fullContent,
                             raw_analysis: analysis,
-                            processorVersion: "3.0"
+                            processorVersion: "4.0"
                         };
 
-                        await newCollection.insertOne(analysisDoc);
+                        await targetCollection.insertOne(analysisDoc);
                         logger.info(`✓ Successfully processed tender ${tender.tenderId} with prompt "${promptConfig.name}"`);
                         await new Promise(r => setTimeout(r, 1000)); // Rate limiting
                     } catch (error) {
