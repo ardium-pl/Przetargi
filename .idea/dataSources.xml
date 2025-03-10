@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="@junction.proxy.rlwy.net" uuid="067b3a00-3bb9-4e75-b83c-eb949f97b553">
+    <data-source source="LOCAL" name="@junction.proxy.rlwy.net" uuid="c4697f8d-c77b-4b6d-b9bc-9f8c6f98fc0a">
       <driver-ref>mongo</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>com.dbschema.MongoJdbcDriver</jdbc-driver>
